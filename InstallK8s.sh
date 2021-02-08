@@ -28,17 +28,7 @@ sudo apt-get update && sudo apt-get install -y \
 ## Create /etc/docker
 sudo mkdir /etc/docker
 
-# Set up the Docker daemon
-cat <<EOF | sudo tee /etc/docker/daemon.json
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2"
-}
-EOF
+
 
 # Create /etc/systemd/system/docker.service.d
 sudo mkdir -p /etc/systemd/system/docker.service.d
@@ -63,6 +53,24 @@ docker run --gpus all nvcr.io/nvidia/k8s/cuda-sample:nbody nbody -gpu -benchmark
 
 # End Docker
 
+# Set up the Docker daemon
+cat <<EOF | sudo tee /etc/docker/daemon.json
+{
+  "runtimes": {
+    "nvidia": {
+      "path": "nvidia-container-runtime",
+      "runtimeArgs": []
+    }
+  },
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+
 
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 br_netfilter
@@ -85,3 +93,4 @@ sudo apt-mark hold kubelet kubeadm kubectl
 
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
+
